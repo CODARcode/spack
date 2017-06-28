@@ -50,7 +50,7 @@ fd.write("packages:\n")
 
 
 # List of binaries commonly found on a typical Linux system
-for binary_name in ['cmake','autoconf','m4','python','automake','pkg-config','gettext','tar','bison','zsh']:
+for binary_name in ['cmake','autoconf','m4','flex','python','automake','pkg-config','gettext','tar','bison','zsh']:
     search_binary(binary_name)
 
 print("---Done---")
