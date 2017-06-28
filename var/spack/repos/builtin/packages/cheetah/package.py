@@ -36,7 +36,7 @@ class Cheetah(Package):
     version('develop', git='https://github.com/CODARcode/cheetah.git',
             branch='master')
 
-    depends_on('python')
+    depends_on('python@3:')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)
