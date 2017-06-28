@@ -37,6 +37,7 @@ class Cheetah(Package):
             branch='master')
 
     depends_on('python@3:')
+    depends_on('savanna')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)

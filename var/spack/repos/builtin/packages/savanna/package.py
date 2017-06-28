@@ -39,6 +39,7 @@ class Savanna(Package):
     depends_on('stc')
     depends_on('adios@develop +staging')
     depends_on('mpix-launch-swift')
+    depends_on('tau')
 
     def install(self, spec, prefix):
         make()
