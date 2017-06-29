@@ -32,7 +32,7 @@ class Savanna(Package):
     homepage = "https://github.com/CODARcode/savanna"
     url      = "https://github.com/CODARcode/savanna.git"
 
-    version('head', git='https://github.com/CODARcode/savanna.git',
+    version('develop', git='https://github.com/CODARcode/savanna.git',
             branch='master')
 
     variant('tau', default=False, description='Enable TAU profiling support')
