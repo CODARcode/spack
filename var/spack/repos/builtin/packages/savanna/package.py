@@ -35,11 +35,13 @@ class Savanna(Package):
     version('head', git='https://github.com/CODARcode/savanna.git',
             branch='master')
 
+    variant('tau', default=False, description='Enable TAU profiling support')
+
     depends_on('mpich')
     depends_on('stc')
     depends_on('adios@develop +staging')
     depends_on('mpix-launch-swift')
-    depends_on('tau')
+    depends_on('tau', when='+tau')
 
     def install(self, spec, prefix):
         make()
