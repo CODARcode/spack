@@ -30,17 +30,30 @@ class Turbine(AutotoolsPackage):
     """Turbine: The Swift/T runtime"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/turbine-1.0.0.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/turbine-1.1.0.tar.gz'
 
-    version('1.0.0', '7ed56d65d6db0bfe15a439d818b4259e')
+    version('1.1.0', '9a347cf16df02707cb529f96c265a082')
+
+    variant('python', default=False,
+            description='Enable calling python')
 
     depends_on('adlbx')
     depends_on('tcl')
-    depends_on('zsh', type='run')
+    depends_on('zsh')
+    depends_on('swig', type='build')
+    depends_on('python', when='+python')
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,
                 '--with-adlb='    + self.spec['adlbx'].prefix,
                 '--with-tcl='     + self.spec['tcl'].prefix,
                 '--with-mpi='     + self.spec['mpi'].prefix]
+        if '+python' in self.spec:
+            if self.spec['python'].satisfies('@3'):
+                # newer python3.X does not create python link by default
+                pythonex = 'python3'
+            else:
+                pythonex = 'python'
+            args += ['--with-python-exe='
+                     + join_path(self.spec['python'].prefix.bin, pythonex)]
         return args

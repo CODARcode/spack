@@ -39,6 +39,7 @@ class MpixLaunchSwift(Package):
     depends_on('stc')
     depends_on('tcl')
     depends_on('mpi')
+    depends_on('swig', type='build')
 
     def install(self, spec, prefix):
         make()
