@@ -4,6 +4,30 @@ import subprocess
 from os.path import expanduser
 
 
+def write_to_file(binary_name, version, root_dir):
+    # Write everything to the spack packages.yaml file
+    fd.write("    %s:\n        paths:\n            %s@%s: %s"
+            % (binary_name,binary_name,version,root_dir))
+
+
+def get_version_and_path (binary_name):
+    # Get the version of the binary package
+    version=""
+    version_str = '--version'
+    version_tokens= subprocess.check_output(binary_name + " " + version_str, stderr=subprocess.STDOUT, shell=True)\
+                    .splitlines()[0].split()
+    for token in version_tokens:
+        if token.replace(".","").isdigit():
+            version = token
+
+    # Get the parent dir of the binary
+    binary_path = subprocess.check_output(['dirname',subprocess.check_output(['which', binary_name]) ])
+    root_dir = subprocess.check_output(['dirname',binary_path])
+
+    return (version, root_dir)
+
+
+
 def search_binary (binary_name):
     """Search if binary exists in PATH. If it does,
      get the version number and parent directory name,
@@ -16,21 +40,17 @@ def search_binary (binary_name):
     # Get version number and parent directory if binary exists
     if binary_found == 0:
 
-        # Get ther version of the binary package
-        version_str = '--version'
-        version_tokens= subprocess.check_output(binary_name + " " + version_str, stderr=subprocess.STDOUT, shell=True)\
-            .splitlines()[0].split()
-        for token in version_tokens:
-            if token.replace(".","").isdigit():
-                version = token
+        # Get the version number and root dir
+        (version,root_dir) = get_version_and_path(binary_name)
+        # Some exceptions
+        if binary_name == 'openssl':
+            version = "none"
+        
+        if binary_name == 'libtoolize':
+            binary_name = "libtool"
 
-        # Get the parent dir of the binary
-        binary_path = subprocess.check_output(['dirname',subprocess.check_output(['which', binary_name]) ])
-        root_dir = subprocess.check_output(['dirname',binary_path])
-
-        # Write everything to the spack packages.yaml file
-        fd.write("    %s:\n        paths:\n            %s@%s: %s"
-              % (binary_name,binary_name,version,root_dir))
+        # Write everything to the spack packages.yaml
+        write_to_file(binary_name, version, root_dir)
 
 
 # General information
@@ -50,7 +70,7 @@ fd.write("packages:\n")
 
 
 # List of binaries commonly found on a typical Linux system
-for binary_name in ['cmake','autoconf','m4','flex','python','automake','pkg-config','gettext','tar','bison','zsh']:
+for binary_name in ['cmake','autoconf','m4','flex','libtoolize','openssl','python','automake','pkg-config','gettext','tar','bison','zsh']:
     search_binary(binary_name)
 
 print("---Done---")
