@@ -25,26 +25,28 @@
 from spack import *
 
 
-class Szip(AutotoolsPackage):
-    """Szip is an implementation of the extended-Rice lossless
-     compression algorithm.
+class Lftp(AutotoolsPackage):
+    """LFTP is a sophisticated file transfer program supporting a number
+       of network protocols (ftp, http, sftp, fish, torrent)."""
 
-    It provides lossless compression of scientific data, and is
-    provided with HDF software products.
-    """
+    homepage = "http://lftp.yar.ru/"
+    url      = "http://lftp.yar.ru/ftp/lftp-4.7.7.tar.gz"
 
-    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
-    list_depth = 2
+    version('4.7.7', 'ddc71b3b11a1af465e829075ae14b3ff')
 
-    version('2.1.1', 'dd579cf0f26d44afd10a0ad7291fc282')
-    version('2.1',   '902f831bcefb69c6b635374424acbead')
+    depends_on('expat')
+    depends_on('libiconv')
+    depends_on('ncurses')
+    depends_on('openssl')
+    depends_on('readline')
+    depends_on('zlib')
 
     def configure_args(self):
         return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
+            '--with-expat={0}'.format(self.spec['expat'].prefix),
+            '--with-libiconv={0}'.format(self.spec['libiconv'].prefix),
+            '--with-openssl={0}'.format(self.spec['openssl'].prefix),
+            '--with-readline={0}'.format(self.spec['readline'].prefix),
+            '--with-zlib={0}'.format(self.spec['zlib'].prefix),
+            '--disable-dependency-tracking',
         ]
