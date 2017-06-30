@@ -27,11 +27,12 @@ from distutils.dir_util import copy_tree
 
 
 class MpixLaunchSwift(Package):
-    """FIXME: Put a proper description of your package here."""
+    """Library that allows a child MPI application to be launched
+    inside a subset of processes in a parent MPI application.
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
+    homepage = "https://bitbucket.org/kshitijvmehta/mpix_launch_swift"
+    url = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
 
     version('develop', git='https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git',
             branch='envs')

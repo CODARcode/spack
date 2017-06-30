@@ -30,7 +30,7 @@ class Savanna(Package):
     """
 
     homepage = "https://github.com/CODARcode/savanna"
-    url      = "https://github.com/CODARcode/savanna.git"
+    url = "https://github.com/CODARcode/savanna.git"
 
     version('develop', git='https://github.com/CODARcode/savanna.git',
             branch='master')

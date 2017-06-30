@@ -40,6 +40,5 @@ class GtkorvoAtl(CMakePackage):
     depends_on('gtkorvo-cercs-env')
 
     def cmake_args(self):
-        #args = ["-DENABLE_TESTING=0"]
-        args = ["-DENABLE_TESTING=0","-DENABLE_BUILD_STATIC=STATIC"]
+        args = ["-DENABLE_TESTING=0", "-DENABLE_BUILD_STATIC=STATIC"]
         return args
