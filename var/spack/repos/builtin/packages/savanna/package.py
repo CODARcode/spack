@@ -40,7 +40,7 @@ class Savanna(Package):
 
     variant('tau', default=False, description='Enable TAU profiling support')
 
-    depends_on('mpich')
+    depends_on('mpi')
     depends_on('stc')
     depends_on('adios@develop +staging')
     depends_on('mpix-launch-swift')
