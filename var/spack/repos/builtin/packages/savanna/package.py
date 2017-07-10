@@ -35,7 +35,7 @@ class Savanna(Package):
     url = "https://github.com/CODARcode/savanna/archive/v0.5.tar.gz"
 
     version('develop', git='https://github.com/CODARcode/savanna.git',
-            branch='master')
+            branch='master', submodules=True)
     version('0.5', '3f13adf29ec30f4acb2ba3fa07ed12b2')
 
     variant('tau', default=False, description='Enable TAU profiling support')
