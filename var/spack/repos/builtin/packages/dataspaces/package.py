@@ -63,6 +63,9 @@ class Dataspaces(AutotoolsPackage):
     variant('mpi',
         default=True,
         description='Use MPI for collective communication')
+    variant('tcp',
+        default=False,
+        description='Use TCP for data transfer')
 
     depends_on('m4', type='build')
     depends_on('automake', type='build')
@@ -88,4 +91,6 @@ class Dataspaces(AutotoolsPackage):
         if self.spec.satisfies('+mpi'):
             args.append('CC=%s' % self.spec['mpi'].mpicc)
             args.append('FC=%s' % self.spec['mpi'].mpifc)
+        if self.spec.satisfies('+tcp'):
+            args.append('--enable-dart-tcp')
         return args
