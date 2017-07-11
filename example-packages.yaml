@@ -1,0 +1,43 @@
+packages:
+    cmake:
+        paths:
+            cmake@3.0.2: /usr
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+    m4:
+        paths:
+            m4@1.4.17: /usr
+    flex:
+        paths:
+            flex@2.5.39: /usr
+    libtool:
+        paths:
+            libtool@2.4.2: /usr
+    openssl:
+        paths:
+            openssl@none: /usr
+    python:
+        paths:
+            python@2.7.9: /usr
+    automake:
+        paths:
+            automake@1.14.1: /usr
+    pkg-config:
+        paths:
+            pkg-config@0.28: /usr
+    gettext:
+        paths:
+            gettext@0.19.3: /usr
+    tar:
+        paths:
+            tar@1.27.1: /
+    bison:
+        paths:
+            bison@3.0.2: /usr
+    zsh:
+        paths:
+            zsh@5.0.7: /usr
+    all:
+        providers:
+            mpi: [mpich]
