@@ -1,6 +1,5 @@
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,10 +39,11 @@ class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
+    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.3.tar.gz"
 
     version('develop', git='https://github.com/melrom/dataspaces.git',
             branch='master')
+    version('1.6.3', 'aa5156331a5be2b966381751a26b3957')
     version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
 
     variant('dimes',
@@ -63,6 +63,9 @@ class Dataspaces(AutotoolsPackage):
     variant('mpi',
         default=True,
         description='Use MPI for collective communication')
+    variant('tcp',
+        default=False,
+        description='Use TCP for data transfer')
 
     depends_on('m4', type='build')
     depends_on('automake', type='build')
@@ -88,4 +91,6 @@ class Dataspaces(AutotoolsPackage):
         if self.spec.satisfies('+mpi'):
             args.append('CC=%s' % self.spec['mpi'].mpicc)
             args.append('FC=%s' % self.spec['mpi'].mpifc)
+        if self.spec.satisfies('+tcp'):
+            args.append('--enable-dart-tcp')
         return args
