@@ -1,5 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,14 +25,16 @@
 ##############################################################################
 
 from spack import *
-from subprocess import call
+import six
+
 
 def is_string(x):
     """validate a string"""
     try:
-        return isinstance(x, basestring)
+        return isinstance(x, six.string_types)
     except ValueError:
         return False
+
 
 class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
@@ -58,33 +61,31 @@ class Dataspaces(AutotoolsPackage):
         description='Cray UGNI protection tag',
         values=is_string)
     variant('mpi',
-        default=False,
+        default=True,
         description='Use MPI for collective communication')
 
-
-    depends_on('m4')
-    depends_on('automake')
-    depends_on('autoconf')
-    depends_on('libtool')
-    # spack interal pkg-config seems to cause problems on Titan
-    #depends_on('pkg-config')
+    depends_on('m4', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
     depends_on('mpi', when='+mpi')
 
     def autoreconf(spec, prefix, self):
-        call(['sh', './autogen.sh'])
+        bash = which('bash')
+        bash('./autogen.sh')
 
     def configure_args(self):
         args = []
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
         if self.spec.satisfies('+dimes'):
-            args.extend(['--enable-dimes'])
+            args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):
-            args.extend(['--enable-drc'])
+            args.append('--enable-drc')
         else:
-            args.extend(['--with-gni-cookie=%s' % cookie])
-            args.extend(['--with-gni-ptag=%s' % ptag])
+            args.append('--with-gni-cookie=%s' % cookie)
+            args.append('--with-gni-ptag=%s' % ptag)
         if self.spec.satisfies('+mpi'):
-            args.extend(['CC=%s' % self.spec['mpi'].mpicc])
-            args.extend(['FC=%s' % self.spec['mpi'].mpifc])
+            args.append('CC=%s' % self.spec['mpi'].mpicc)
+            args.append('FC=%s' % self.spec['mpi'].mpifc)
         return args
