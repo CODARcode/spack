@@ -87,6 +87,7 @@ class Adios(AutotoolsPackage):
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
     depends_on('libevpath', when='+flexpath')
     depends_on('libevpath', when='+staging')
+    depends_on('dataspaces+mpi', when='+dataspaces')
     depends_on('dataspaces+mpi', when='+staging')
 
     build_directory = 'spack-build'
