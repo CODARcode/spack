@@ -29,7 +29,7 @@ class GtkorvoCercsEnv(CMakePackage):
     """A utility library used by some GTkorvo packages.
     """
 
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/GTkorvo/cercs_env"
     url = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
 
     version('develop', git='https://github.com/GTkorvo/cercs_env.git',
