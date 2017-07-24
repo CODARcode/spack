@@ -25,26 +25,38 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Revbayes(CMakePackage):
+    """Bayesian phylogenetic inference using probabilistic graphical models
+       and an interpreted language."""
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://revbayes.github.io"
+    url      = "https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
+    version('1.0.4', '5d6de96bcb3b2686b270856de3555a58')
 
-    def build_type(self):
-        return "Release"
+    variant('mpi', default=True, description='Enable MPI parallel support')
 
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    depends_on('boost')
+    depends_on('mpi', when='+mpi')
+
+    conflicts('%gcc@7.1.0:')
+
+    root_cmakelists_dir = 'projects/cmake/build'
+
+    @run_before('cmake')
+    def regenerate(self):
+        with working_dir(join_path('projects', 'cmake')):
+            mkdirp('build')
+            edit = FileFilter('regenerate.sh')
+            edit.filter('boost="true"', 'boost="false"')
+            if '+mpi' in self.spec:
+                edit.filter('mpi="false"', 'mpi="true"')
+            regenerate = Executable('./regenerate.sh')
+            regenerate()
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        if '+mpi' in spec:
+            install('rb-mpi', prefix.bin)
+        else:
+            install('rb', prefix.bin)
