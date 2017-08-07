@@ -46,13 +46,11 @@ class Adios(AutotoolsPackage):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    variant('fortran', default=True,
+    variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('no_mpi', default=False, description='Disable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
-    variant('mxml', default=False, description='Build with external mxml')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
@@ -82,6 +80,7 @@ class Adios(AutotoolsPackage):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
+    depends_on('libevpath', when='+flexpath')
     depends_on('libevpath', when='+staging')
     depends_on('dataspaces+mpi', when='+dataspaces')
     depends_on('dataspaces+mpi', when='+staging')
