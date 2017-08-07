@@ -34,7 +34,7 @@ class Stc(AutotoolsPackage):
 
     version('0.7.4', '88424cb7acdb0b712f76717aae40090f')
 
-    depends_on('jdk')
+    depends_on('java')
     depends_on('ant')
     depends_on('turbine')
 
