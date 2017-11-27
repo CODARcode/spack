@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,9 @@ class PyPylint(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-astroid', type=('build', 'run'))
     depends_on('py-logilab-common', type=('build', 'run'))
+    depends_on('py-pytest-runner', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm@1.15.0:', type='build')
 
     # TODO: Add a 'test' deptype
     # depends_on('py-nose', type='test')

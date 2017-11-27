@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,8 +27,7 @@ import inspect
 import os
 import os.path
 import shutil
-from os import stat
-from stat import *
+import stat
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -153,7 +152,7 @@ class AutotoolsPackage(PackageBase):
         if config_guess is not None:
             try:
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                mod = stat(my_config_guess).st_mode & 0o777 | S_IWUSR
+                mod = os.stat(my_config_guess).st_mode & 0o777 | stat.S_IWUSR
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return
@@ -222,10 +221,10 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            if 'pkg-config' in spec:
+            if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

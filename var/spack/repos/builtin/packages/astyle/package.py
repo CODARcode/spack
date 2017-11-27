@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,9 @@ class Astyle(MakefilePackage):
     """
 
     homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    # homepage is dead use Gentoo Mirror
+    # url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
     maintainers = ['davydden']
 

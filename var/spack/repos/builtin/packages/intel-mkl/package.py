@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,12 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2018.1.163', 'f1f7b6ddd7eb57dfe39bd4643446dc1c',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_mkl_2018.1.163.tgz")
     version('2018.0.128', '0fa23779816a0f2ee23a396fc1af9978',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12070/l_mkl_2018.0.128.tgz")
+    version('2017.4.239', '3066272dd0ad3da7961b3d782e1fab3b',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12147/l_mkl_2017.4.239.tgz")
     version('2017.3.196', '4a2eb4bee789391d9c07d7c348a80702',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11544/l_mkl_2017.3.196.tgz")
     version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
@@ -180,11 +184,15 @@ class IntelMkl(IntelPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
-        mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
-            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        if sys.platform == 'darwin':
+            mkl_lib = self.prefix.mkl.lib
+            mkl_root = self.prefix.mkl
+        else:
+            mkl_lib = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+            mkl_root = self.prefix.compilers_and_libraries.linux.mkl
 
-        spack_env.set('MKLROOT', self.prefix)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
+        spack_env.set('MKLROOT', mkl_root)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_lib)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -205,6 +213,11 @@ class IntelMkl(IntelPackage):
         # this problem.
         mklvars = os.path.join(self.prefix.mkl.bin, 'mklvars.sh')
 
-        if os.path.isfile(mklvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                mklvars, 'intel64'))
+        if sys.platform == 'darwin':
+            if os.path.isfile(mklvars):
+                run_env.extend(EnvironmentModifications.from_sourcing_file(
+                    mklvars))
+        else:
+            if os.path.isfile(mklvars):
+                run_env.extend(EnvironmentModifications.from_sourcing_file(
+                    mklvars, 'intel64'))
