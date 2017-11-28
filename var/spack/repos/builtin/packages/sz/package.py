@@ -40,6 +40,8 @@ class Sz(AutotoolsPackage):
 
     variant('fortran', default=False,
             description='Enable fortran compilation')
+    variant('shared', default=True,
+            description='Enable building shared library')
 
     def configure_args(self):
         args = []
@@ -47,4 +49,8 @@ class Sz(AutotoolsPackage):
             args += ['--enable-fortran']
         else:
             args += ['--disable-fortran']
+        if '+shared' in self.spec:
+            args += ['--enable-shared']
+        else:
+            args += ['--disable-shared']
         return args
