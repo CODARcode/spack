@@ -148,6 +148,7 @@ class Adios(AutotoolsPackage):
         if '+mpi' in spec:
             env['MPICC'] = spec['mpi'].mpicc
             env['MPICXX'] = spec['mpi'].mpicxx
+            env['MPIFC'] = spec['mpi'].mpifc
 
         extra_args += self.with_or_without('mpi', activation_value='prefix')
         extra_args += self.with_or_without('infiniband')
@@ -171,5 +172,18 @@ class Adios(AutotoolsPackage):
             'staging',
             activation_value=with_staging
         )
+
+        if spec.satisfies('%intel'):
+            extra_args.append('CC=icc')
+            extra_args.append('CXX=icpc')
+            extra_args.append('FC=ifort')
+        elif spec.satisfies('%gcc'):
+            extra_args.append('CC=gcc')
+            extra_args.append('CXX=g++')
+            extra_args.append('FC=gfortran')
+        elif spec.satisfies('%pgi'):
+            extra_args.append('CC=pgcc')
+            extra_args.append('CXX=pgCC')
+            extra_args.append('FC=pgf90')
 
         return extra_args
