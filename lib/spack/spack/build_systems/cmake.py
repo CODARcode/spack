@@ -140,11 +140,14 @@ class CMakePackage(PackageBase):
         ]
 
         if platform.mac_ver()[0]:
-            args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
+            args.extend([
+                '-DCMAKE_FIND_FRAMEWORK:STRING=LAST',
+                '-DCMAKE_FIND_APPBUNDLE:STRING=LAST'
+            ])
 
         # Set up CMake rpath
         args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
+        rpaths = ';'.join(spack.build_environment.get_rpaths(pkg))
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
         # to find immediate link dependencies in right places:

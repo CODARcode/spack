@@ -22,19 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-from spack.cmd.md5 import do_checksum
-
-description = "calculate sha256 checksums for files/urls"
-section = "packaging"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
-    subparser.add_argument('files', nargs=argparse.REMAINDER,
-                           help="files/urls to checksum")
+class PerlTryTiny(PerlPackage):
+    """Minimal try/catch with proper preservation of $@"""
 
+    homepage = "http://search.cpan.org/~ether/Try-Tiny-0.28/lib/Try/Tiny.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Try-Tiny-0.28.tar.gz"
 
-def sha256(parser, args):
-    do_checksum(parser, args, 'sha256')
+    version('0.28', 'e2f8af601a62981aab30df15a6f47475')
