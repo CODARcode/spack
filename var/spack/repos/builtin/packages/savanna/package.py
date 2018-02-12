@@ -37,13 +37,13 @@ class Savanna(MakefilePackage):
     version('develop', git='https://github.com/CODARcode/savanna.git',
             branch='master', submodules=True)
     version('0.5', git='https://github.com/CODARcode/savanna.git',
-            tag='0.5', submodules=True)
+            submodules=True)
 
     variant('tau', default=False, description='Enable TAU profiling support')
 
     depends_on('mpi')
     depends_on('stc')
-    depends_on('adios +fortran +zlib +sz +zfp +staging')
+    depends_on('adios +fortran +zlib +bzip2 +lz4 +sz +zfp staging=flexpath,dataspaces')
     depends_on('mpix-launch-swift')
     depends_on('tau', when='+tau')
 
