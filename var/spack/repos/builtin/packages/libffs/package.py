@@ -34,10 +34,11 @@ class Libffs(CMakePackage):
     """
 
     homepage = "http://www.cc.gatech.edu/systems/projects/FFS"
-    url = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
+    url = "https://github.com/GTkorvo/ffs/archive/v1.4.tar.gz"
 
     version('develop', git='https://github.com/GTkorvo/ffs.git',
             branch='master')
+    version('1.4', '00e5f4c61367f2ff40da47f9c2d63a56')
     version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
     version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
 
