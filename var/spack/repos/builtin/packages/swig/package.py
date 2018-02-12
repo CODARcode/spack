@@ -39,7 +39,7 @@ class Swig(AutotoolsPackage):
        application."""
 
     homepage = "http://www.swig.org"
-    url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.12.tar.gz"
+    url      = "https://sourceforge.net/projects/swig/files/swig/swig-3.0.12/swig-3.0.12.tar.gz"
 
     version('3.0.12', '82133dfa7bba75ff9ad98a7046be687c')
     version('3.0.11', '13732eb0f1ab2123d180db8425c1edea')
