@@ -123,7 +123,7 @@ class IntelMkl(IntelPackage):
             mkl_root = prefix.mkl.lib
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
@@ -181,6 +181,18 @@ class IntelMkl(IntelPackage):
         )
 
         return libs
+
+    @property
+    def headers(self):
+        prefix = self.spec.prefix
+        if sys.platform != 'darwin':
+            include_dir = prefix.compilers_and_libraries.linux.mkl.include
+        else:
+            include_dir = prefix.include
+
+        cblas_h = join_path(include_dir, 'mkl_cblas.h')
+        lapacke_h = join_path(include_dir, 'mkl_lapacke.h')
+        return HeaderList([cblas_h, lapacke_h])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
