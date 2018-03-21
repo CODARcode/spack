@@ -55,6 +55,8 @@ class Adios(AutotoolsPackage):
             description='Enable MPI support')
     variant('infiniband', default=False,
             description='Enable infiniband support')
+    variant('timers', default=False,
+            description='Enable internal timer events')
 
     # transforms
     variant('zlib', default=True,
@@ -153,6 +155,7 @@ class Adios(AutotoolsPackage):
 
         extra_args += self.enable_or_disable('shared')
         extra_args += self.enable_or_disable('fortran')
+        extra_args += self.enable_or_disable('timers')
 
         if '+mpi' in spec:
             env['MPICC'] = spec['mpi'].mpicc
