@@ -71,6 +71,8 @@ class Adios(AutotoolsPackage):
             description='Enable SZ transform support')
     variant('lz4', default=True,
             description='Enable LZ4 transform support')
+    variant('mgard', default=False,
+            description='Enable MGARD transform support')
     variant('blosc', default=True,
             description='Enable Blosc transform support')
     # transports and serial file converters
@@ -108,6 +110,7 @@ class Adios(AutotoolsPackage):
     depends_on('netcdf', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
+    depends_on('mgard', when='+mgard')
 
     for p in ['+hdf5', '+netcdf', 'staging=flexpath', 'staging=dataspaces']:
         conflicts(p, when='~mpi')
@@ -166,7 +169,7 @@ class Adios(AutotoolsPackage):
         extra_args += self.with_or_without('infiniband')
 
         # Transforms
-        variants = ['zlib', 'bzip2', 'szip']
+        variants = ['zlib', 'bzip2', 'szip', 'mgard']
         if spec.satisfies('@1.11.0:'):
             variants += ['zfp']
         if spec.satisfies('@1.12.0:'):

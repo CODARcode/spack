@@ -22,37 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install mgard
+#
+# You can edit this file again by typing:
+#
+#     spack edit mgard
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
-class Sz(AutotoolsPackage):
-    """Error-bounded Lossy Compressor for HPC Data."""
+class Mgard(Package):
+    """A Multilevel Technique for Compression of Floating-Point Data."""
 
-    homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "https://github.com/disheng222/SZ/archive/v1.4.11.0.tar.gz"
+    # Note: no homepage yet?! Use placeholders.
+    homepage = "https://github.com/CODARcode/cheetah"
+    url      = "https://github.com/CODARcode/cheetah/archive/v0.1.tar.gz"
 
-    version('develop', git='https://github.com/disheng222/SZ.git',
-            branch='master')
-    version('1.4.13.0', '793d7b58b6c959df0a91e6df3ed149c1')
-    version('1.4.12.3', '5f51be8530cdfa5280febb410ac6dd94')
-    version('1.4.11.0', '10dee28b3503821579ce35a50e352cc6')
-    version('1.4.10.0', '82e23dc5a51bcce1f70ba7e3b68a5965')
-    version('1.4.9.2',  '028ce90165b7a4c4051d4c0189f193c0')
+    version('develop', '2cc795b5da26036097b8bcda748649e4')
 
-    variant('fortran', default=False,
-            description='Enable fortran compilation')
-    variant('shared', default=True,
-            description='Enable building shared library')
+    def build(self, spec, prefix):
+        make()
 
-    def configure_args(self):
-        args = []
-        if '+fortran' in self.spec:
-            args += ['--enable-fortran']
-        else:
-            args += ['--disable-fortran']
-        if '+shared' in self.spec:
-            args += ['--enable-shared']
-        else:
-            args += ['--disable-shared']
-        return args
+    def install(self, spec, prefix):
+        # Note: mgard package does not provide an install target
+        mkdirp(prefix.lib)
+        mkdirp(prefix.include)
+        install('lib/libmgard.a', prefix.lib)
+        install('include/mgard.h', prefix.include)
+        install('include/mgard_capi.h', prefix.include)
+        install('include/mgard_nuni.h', prefix.include)
