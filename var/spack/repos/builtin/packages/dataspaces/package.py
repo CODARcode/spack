@@ -64,6 +64,9 @@ class Dataspaces(AutotoolsPackage):
     variant('mpi',
         default=True,
         description='Use MPI for collective communication')
+    variant('infiniband',
+        default=True,
+        description='Use Infiniband for data transfer')
     variant('tcp',
         default=False,
         description='Use TCP for data transfer')
@@ -94,4 +97,8 @@ class Dataspaces(AutotoolsPackage):
             args.append('FC=%s' % self.spec['mpi'].mpifc)
         if self.spec.satisfies('+tcp'):
             args.append('--enable-dart-tcp')
+        if self.spec.satisfies('+infiniband'):
+            args.append('--with-infiniband')
+        else:
+            args.append('--without-infiniband')
         return args
