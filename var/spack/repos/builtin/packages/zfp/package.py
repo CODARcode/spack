@@ -82,3 +82,11 @@ class Zfp(MakefilePackage):
         else:
             install('%s/types.h' % incdir, prefix.include)
             install('%s/system.h' % incdir, prefix.include)
+            # for backward compatibility with code using 'inc' as the include
+            # directory, create duplicates there
+            prefix_inc = '%s/inc/' % prefix
+            mkdirp(prefix_inc)
+            install('%s/types.h' % incdir, prefix_inc)
+            install('%s/system.h' % incdir, prefix_inc)
+            install('%s/zfp.h' % incdir, prefix_inc)
+            install('%s/bitstream.h' % incdir, prefix_inc)
