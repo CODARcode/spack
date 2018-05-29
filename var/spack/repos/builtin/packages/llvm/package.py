@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -89,6 +89,7 @@ class Llvm(CMakePackage):
     depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
+    depends_on('py-six', when='@5.0.0: +lldb +python')
 
     # gold support
     depends_on('binutils+gold', when='+gold')
@@ -414,6 +415,27 @@ class Llvm(CMakePackage):
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
 
+    @run_before('cmake')
+    def check_darwin_lldb_codesign_requirement(self):
+        if not self.spec.satisfies('+lldb platform=darwin'):
+            return
+        codesign = which('codesign')
+        cp = which('cp')
+        mkdir('tmp')
+        llvm_check_file = join_path('tmp', 'llvm_check')
+        cp('/usr/bin/false', llvm_check_file)
+
+        try:
+            codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                     llvm_check_file)
+
+        except ProcessError:
+            explanation = ('The "lldb_codesign" identity must be available'
+                           ' to build LLVM with LLDB. See https://llvm.org/'
+                           'svn/llvm-project/lldb/trunk/docs/code-signing'
+                           '.txt for details on how to create this identity.')
+            raise RuntimeError(explanation)
+
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
@@ -441,6 +463,8 @@ class Llvm(CMakePackage):
                                '-DLLVM_POLLY_BUILD:Bool=OFF',
                                '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
+        if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
+            cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:
