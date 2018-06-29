@@ -91,7 +91,7 @@ class Adios(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('m4', type='build')
-    depends_on('libtool@:2.4.2', type='build')
+    depends_on('libtool@:2.4.2', type='build', when='@:1.13.0')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
