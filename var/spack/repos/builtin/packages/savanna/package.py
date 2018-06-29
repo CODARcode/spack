@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,26 +26,23 @@ from spack import *
 from distutils.dir_util import copy_tree
 
 
-class Savanna(MakefilePackage):
+class Savanna(Package):
     """CODARcode Savanna runtime framework for high performance,
-    workflow management using Swift/T and ADIOS.
+    workflow management for exascale. 
     """
 
     homepage = "https://github.com/CODARcode/savanna"
     url = "https://github.com/CODARcode/savanna/archive/v0.5.tar.gz"
 
     version('develop', git='https://github.com/CODARcode/savanna.git',
-            branch='master', submodules=True)
-    version('0.5', git='https://github.com/CODARcode/savanna.git',
-            submodules=True)
+            branch='master')
+    version('1.0', 'b67f0b9f0453baeddb533cd3255e5270')
 
     variant('tau', default=False, description='Enable TAU profiling support')
 
-    depends_on('mpi')
-    depends_on('stc')
-    depends_on('adios +fortran +zlib +bzip2 +lz4 +sz +zfp staging=flexpath,dataspaces')
-    depends_on('mpix-launch-swift')
-    depends_on('tau', when='+tau')
+    depends_on('mpi', type='run')
+    depends_on('adios +fortran +blosc +zlib +bzip2 +lz4 +sz +zfp staging=flexpath,dataspaces', type='run')
+    depends_on('tau', when='+tau', type='run')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)

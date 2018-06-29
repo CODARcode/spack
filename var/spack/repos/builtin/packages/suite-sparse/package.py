@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -46,6 +46,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
@@ -58,6 +59,10 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+
+    # This patch adds '-lm' when linking libgraphblas and when using clang.
+    # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
+    patch('graphblas_libm_dep.patch', when='@5.2.0:%clang')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -115,7 +120,7 @@ class SuiteSparse(Package):
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
 
-        if '%xl' in spec or '%xl_r' in spec:
+        if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR

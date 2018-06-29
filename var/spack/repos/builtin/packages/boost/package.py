@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -46,6 +46,8 @@ class Boost(Package):
             branch='develop',
             submodules=True)
 
+    version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae',
+            url='https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2')
     version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
             url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
@@ -124,6 +126,11 @@ class Boost(Package):
         variant(lib, default=(lib not in default_noinstall_libs),
                 description="Compile with {0} library".format(lib))
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
     variant('debug', default=False,
             description='Switch to the debug version of Boost')
     variant('shared', default=True,
@@ -142,14 +149,18 @@ class Boost(Package):
             description="Augment library layout with versioned subdirs")
     variant('clanglibcpp', default=False,
             description='Compile with clang libc++ instead of libstdc++')
+    variant('numpy', default=False,
+            description='Build the Boost NumPy library (requires +python)')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
+    depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
     conflicts('+taggedlayout', when='+versionedlayout')
+    conflicts('+numpy', when='~python')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -166,6 +177,7 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
@@ -194,6 +206,10 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies('@:1.58'):
+            return ''
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,
@@ -239,6 +255,26 @@ class Boost(Package):
 
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
+
+    def cxxstd_to_flag(self, std):
+        flag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            flag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            flag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            flag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            flag = self.compiler.cxx17_flag
+        elif self.spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
+                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        return flag
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -289,6 +325,19 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        # Other C++ flags.
+        cxxflags = []
+
+        # Deal with C++ standard.
+        if spec.satisfies('@1.66:'):
+            if spec.variants['cxxstd'].value != 'default':
+                options.append('cxxstd={0}'.format(
+                    spec.variants['cxxstd'].value))
+        else:  # Add to cxxflags for older Boost.
+            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            if flag:
+                cxxflags.append(flag)
+
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
@@ -296,9 +345,12 @@ class Boost(Package):
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
+                cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
-                                'cxxflags="-stdlib=libc++"',
                                 'linkflags="-stdlib=libc++"'])
+
+        if cxxflags:
+            options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
 
         return threadingOpts
 
@@ -350,7 +402,7 @@ class Boost(Package):
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
-        env['BOOST_BUILD_PATH'] = './'
+        env['BOOST_BUILD_PATH'] = self.stage.source_path
 
         bootstrap = Executable('./bootstrap.sh')
 
@@ -367,7 +419,12 @@ class Boost(Package):
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
-        b2_options = ['-j', '%s' % jobs]
+
+        b2_options = [
+            '-j', '%s' % jobs,
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
+        ]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 

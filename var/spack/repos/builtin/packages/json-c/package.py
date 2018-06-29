@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class JsonC(AutotoolsPackage):
 
     parallel = False
 
-    @when('@0.12.1 %gcc@7')
+    @when('@0.12.1 %gcc@7:')
     def patch(self):
         filter_file('-Wextra',
                     '-Wextra -Wno-error=implicit-fallthrough',

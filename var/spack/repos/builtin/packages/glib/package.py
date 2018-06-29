@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,6 +41,7 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.56.1', '40ef3f44f2c651c7a31aedee44259809b6f03d3d20be44545cd7d177221c0b8d')
     version('2.56.0', 'f2b59392f2fb514bbe7791dda0c36da5')
     version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
     version('2.53.1', '3362ef4da713f834ea26904caf3a75f5')
@@ -81,9 +82,10 @@ class Glib(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.extend(self.enable_or_disable('libmount'))
-        args.append('--with-python={0}'.format(
-            os.path.basename(self.spec['python'].command.path))
-        )
+        if self.spec.satisfies('@2.53.4:'):
+            args.append('--with-python={0}'.format(
+                os.path.basename(self.spec['python'].command.path))
+            )
         args.extend(self.enable_or_disable('tracing'))
         return args
 
