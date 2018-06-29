@@ -34,6 +34,7 @@ class CodarCheetah(Package):
     homepage = "https://github.com/CODARcode/cheetah"
     url = "https://github.com/CODARcode/cheetah/archive/v0.1.tar.gz"
 
+    version('0.5', 'cdfc5fb546d4653ad9d5c2edc257a4aa')
     version('0.1', '6918021f74fa7a2f1de26c0bb31a63ef')
     version('develop', git='https://github.com/CODARcode/cheetah.git',
             branch='master')
