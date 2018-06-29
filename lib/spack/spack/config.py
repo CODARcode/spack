@@ -57,6 +57,7 @@ import multiprocessing
 from contextlib import contextmanager
 from six import string_types
 from six import iteritems
+from ordereddict_backport import OrderedDict
 
 import yaml
 from yaml.error import MarkedYAMLError
@@ -69,7 +70,6 @@ import spack.paths
 import spack.architecture
 import spack.schema
 from spack.error import SpackError
-from spack.util.ordereddict import OrderedDict
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -187,7 +187,6 @@ class ConfigScope(object):
         return self.sections[section]
 
     def write_section(self, section):
-        import jsonschema
         filename = self.get_section_filename(section)
         data = self.get_section(section)
         try:
@@ -195,8 +194,6 @@ class ConfigScope(object):
             with open(filename, 'w') as f:
                 _validate_section(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
-        except jsonschema.ValidationError as e:
-            raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -219,11 +216,13 @@ class InternalConfigScope(ConfigScope):
     def __init__(self, name, data=None):
         self.name = name
         self.sections = syaml.syaml_dict()
+
         if data:
             for section in data:
                 dsec = data[section]
                 _validate_section({section: dsec}, section_schemas[section])
-                self.sections[section] = syaml.syaml_dict({section: dsec})
+                self.sections[section] = _mark_internal(
+                    syaml.syaml_dict({section: dsec}), name)
 
     def get_section_filename(self, section):
         raise NotImplementedError(
@@ -240,6 +239,7 @@ class InternalConfigScope(ConfigScope):
         data = self.get_section(section)
         if data is not None:
             _validate_section(data, section_schemas[section])
+        self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
@@ -361,13 +361,13 @@ class Configuration(object):
 
         """
         _validate_section_name(section)
-        merged_section = syaml.syaml_dict()
 
         if scope is None:
             scopes = self.scopes.values()
         else:
             scopes = [self._validate_scope(scope)]
 
+        merged_section = syaml.syaml_dict()
         for scope in scopes:
             # read potentially cached data from the scope.
 
@@ -414,6 +414,7 @@ class Configuration(object):
         while parts:
             key = parts.pop(0)
             value = value.get(key, default)
+
         return value
 
     def set(self, path, value, scope=None):
@@ -442,12 +443,13 @@ class Configuration(object):
         for scope in self.scopes.values():
             yield scope
 
-    def print_section(self, section):
+    def print_section(self, section, blame=False):
         """Print a configuration to stdout."""
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
-            syaml.dump(data, stream=sys.stdout, default_flow_style=False)
+            syaml.dump(
+                data, stream=sys.stdout, default_flow_style=False, blame=blame)
         except (yaml.YAMLError, IOError):
             raise ConfigError("Error reading configuration: %s" % section)
 
@@ -526,8 +528,9 @@ def scopes():
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in section_schemas:
-        tty.die("Invalid config section: '%s'. Options are: %s"
-                % (section, " ".join(section_schemas.keys())))
+        raise ConfigSectionError(
+            "Invalid config section: '%s'. Options are: %s"
+            % (section, " ".join(section_schemas.keys())))
 
 
 def _validate_section(data, schema):
@@ -593,7 +596,7 @@ def _override(string):
 
 def _mark_overrides(data):
     if isinstance(data, list):
-        return [_mark_overrides(elt) for elt in data]
+        return syaml.syaml_list(_mark_overrides(elt) for elt in data)
 
     elif isinstance(data, dict):
         marked = syaml.syaml_dict()
@@ -606,6 +609,26 @@ def _mark_overrides(data):
 
     else:
         return data
+
+
+def _mark_internal(data, name):
+    """Add a simple name mark to raw YAML/JSON data.
+
+    This is used by `spack config blame` to show where config lines came from.
+    """
+    if isinstance(data, dict):
+        d = syaml.syaml_dict((_mark_internal(k, name), _mark_internal(v, name))
+                             for k, v in data.items())
+    elif isinstance(data, list):
+        d = syaml.syaml_list(_mark_internal(e, name) for e in data)
+    else:
+        d = syaml.syaml_type(data)
+
+    if syaml.markable(d):
+        d._start_mark = yaml.Mark(name, None, None, None, None, None)
+        d._end_mark = yaml.Mark(name, None, None, None, None, None)
+
+    return d
 
 
 def _merge_yaml(dest, source):
@@ -639,6 +662,9 @@ def _merge_yaml(dest, source):
 
     # Source dict is merged into dest.
     elif they_are(dict):
+        # track keys for marking
+        key_marks = {}
+
         for sk, sv in iteritems(source):
             if _override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
@@ -646,6 +672,18 @@ def _merge_yaml(dest, source):
             else:
                 # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
+
+            # this seems unintuitive, but see below. We need this because
+            # Python dicts do not overwrite keys on insert, and we want
+            # to copy mark information on source keys to dest.
+            key_marks[sk] = sk
+
+        # ensure that keys are marked in the destination.  the key_marks dict
+        # ensures we can get the actual source key objects from dest keys
+        for dk in dest.keys():
+            if dk in key_marks:
+                syaml.mark(dk, key_marks[dk])
+
         return dest
 
     # In any other case, overwrite with a copy of the source value.
@@ -657,6 +695,10 @@ class ConfigError(SpackError):
     """Superclass for all Spack config related errors."""
 
 
+class ConfigSectionError(ConfigError):
+    """Error for referring to a bad config section name in a configuration."""
+
+
 class ConfigFileError(ConfigError):
     """Issue reading or accessing a configuration file."""
 
@@ -665,10 +707,38 @@ class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
 
     def __init__(self, validation_error, data):
-        # Try to get line number from erroneous instance and its parent
-        instance_mark = getattr(validation_error.instance, '_start_mark', None)
-        parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = [str(s) for s in getattr(validation_error, 'path', None)]
+        location = '<unknown file>'
+        mark = self._get_mark(validation_error, data)
+        if mark:
+            location = '%s' % mark.name
+            if mark.line is not None:
+                location += ':%d' % (mark.line + 1)
+
+        message = '%s: %s' % (location, validation_error.message)
+        super(ConfigError, self).__init__(message)
+
+    def _get_mark(self, validation_error, data):
+        """Get the file/line mark fo a validation error from a Spack YAML file.
+        """
+        def _get_mark_or_first_member_mark(obj):
+            # mark of object itelf
+            mark = getattr(obj, '_start_mark', None)
+            if mark:
+                return mark
+
+            # mark of first member if it is a container
+            if isinstance(obj, (list, dict)):
+                first_member = next(iter(obj), None)
+                if first_member:
+                    mark = getattr(first_member, '_start_mark', None)
+                    if mark:
+                        return mark
+
+        # Try various places, starting with instance and parent
+        for obj in (validation_error.instance, validation_error.parent):
+            mark = _get_mark_or_first_member_mark(obj)
+            if mark:
+                return mark
 
         def get_path(path, data):
             if path:
@@ -679,29 +749,18 @@ class ConfigFormatError(ConfigError):
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not
         # on the validation_error.
-        if path and not parent_mark:
-            parent_path = list(path)[:-1]
-            parent = get_path(parent_path, data)
+        path = validation_error.path
+        if path:
+            parent = get_path(list(path)[:-1], data)
             if path[-1] in parent:
                 if isinstance(parent, dict):
-                    keylist = parent.keys()
+                    keylist = list(parent.keys())
                 elif isinstance(parent, list):
                     keylist = parent
                 idx = keylist.index(path[-1])
-                parent_mark = getattr(keylist[idx], '_start_mark', None)
+                mark = getattr(keylist[idx], '_start_mark', None)
+                if mark:
+                    return mark
 
-        if instance_mark:
-            location = '%s:%d' % (instance_mark.name, instance_mark.line + 1)
-        elif parent_mark:
-            location = '%s:%d' % (parent_mark.name, parent_mark.line + 1)
-        elif path:
-            location = 'At ' + ':'.join(path)
-        else:
-            location = '<unknown line>'
-
-        message = '%s: %s' % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
-
-
-class ConfigSanityError(ConfigFormatError):
-    """Same as ConfigFormatError, raised when config is written by Spack."""
+        # give up and return None if nothing worked
+        return None
